@@ -45,37 +45,42 @@ char *load_buff(FILE *fd)
   return ret_buff;
 }
 
+int split_instruction(FILE *fd)
+{
+  int ret = 0;
+  char *buff = load_buff(fd);
+  char *tmp = memsize(buff);
+  int idx = 0;
+  while (buff[idx] != '\0')
+  {
+    int idx_tmp = 0;
+     while (buff[idx] != '\0' && buff[idx] != ';')
+    {
+      tmp[idx_tmp] = buff[idx];
+      idx_tmp += 1;
+      idx += 1;
+    }
+    write(1, tmp, idx_tmp);
+    for (int x = 0; x < idx_tmp; x++)
+      tmp[x] = '\0';
+    idx += 1;
+  }
+  free(buff);
+  free(tmp);
+  return ret;
+}
+
 int interact_mode()
 {
   int ret = 0;
-  char *buff;
-  char *tmp;
   while (isatty(0))
   {
     write(1, "minishell$ ", 11);
-    //buff = realloc(buff, sizeof(stdin));
-    buff = load_buff(stdin);
-    tmp = memsize(buff);
-    int idx = 0;
-    while (buff[idx] != '\0')
-    {
-      int idx_tmp = 0;
-       while (buff[idx] != '\0' && buff[idx] != ';')
-      {
-        tmp[idx_tmp] = buff[idx];
-        idx_tmp += 1;
-        idx += 1;
-      }
-      write(1, tmp, idx_tmp);
-      for (int x = 0; x < idx_tmp; x++)
-        tmp[x] = '\0';
-      idx += 1;
-    }
-    free(buff);
-    free(tmp);
+    ret = split_instruction(stdin);
   }
-  /*while (! isatty(0)) 
+  while (! isatty(0)) 
   {
-  }*/
+    ret = split_instruction(stdin);
+  }
   return ret;
 }
