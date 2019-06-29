@@ -5,7 +5,7 @@
 char *load_buff(FILE *fd)
 {
   int ret_fread;
-  char *ret_buff = calloc(sizeof(char), 1);
+  char *ret_buff = calloc(1, sizeof(char));
   int idx = 0;
   int count = 1;
   if (fd != stdin)
@@ -37,7 +37,7 @@ char *load_buff(FILE *fd)
 
 char *memsize(char *src)
 {
-  char *ret = calloc(sizeof(char), 1);
+  char *ret = calloc(1, sizeof(char));
   int i = 0;
   int count = 1;
   while (src[i] != '\0')
@@ -59,21 +59,21 @@ int interact_mode()
     write(1, "minishell$ ", 11);
     //buff = realloc(buff, sizeof(stdin));
     buff = load_buff(stdin);
-    tmp = memsize(buff); 
-    int i = 0;
-    while (buff[i] != '\0')
+    tmp = memsize(buff);
+    int idx = 0;
+    while (buff[idx] != '\0')
     {
-      int j = 0;
-       while (buff[i] != '\0' && buff[i] != ';')
+      int idx_tmp = 0;
+       while (buff[idx] != '\0' && buff[idx] != ';')
       {
-        tmp[j] = buff[i];
-        j += 1;
-        i += 1;
+        tmp[idx_tmp] = buff[idx];
+        idx_tmp += 1;
+        idx += 1;
       }
-      write(1, tmp, sizeof(tmp));
-      for (unsigned x = 0; x < sizeof(tmp); x++)
+      write(1, tmp, idx_tmp);
+      for (int x = 0; x < idx_tmp; x++)
         tmp[x] = '\0';
-      i += 1;
+      idx += 1;
     }
     free(buff);
     free(tmp);
