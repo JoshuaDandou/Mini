@@ -52,8 +52,8 @@ char *memsize(char *src)
 int interact_mode()
 {
   int ret = 0;
-  char *buff = calloc(sizeof(char), 1);
-  char *tmp = memsize(buff);
+  char *buff;
+  char *tmp;
   while (isatty(0))
   {
     write(1, "minishell$ ", 11);
@@ -75,12 +75,12 @@ int interact_mode()
         tmp[x] = '\0';
       i += 1;
     }
+    free(buff);
+    free(tmp);
   }
   /*while (! isatty(0)) 
   {
   }*/
-  free(buff);
-  free(tmp);
   return ret;
 }
 
