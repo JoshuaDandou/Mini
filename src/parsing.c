@@ -1,3 +1,6 @@
+#include <stdbool.h>
+#include <string.h>
+
 char **lexer(char *str)
 {
   char **res = calloc(10, sizeof(char*));
@@ -46,15 +49,47 @@ char **lexer(char *str)
   return res;
 }
 
+void echo(char **param, int x)
+{
+  int i = x;
+  bool n_mode = false;
+  if (strncmp(param[i], "-n", 2) == 0)
+  {
+    n_mode = true;
+    i += 1;
+  }
+  while (param[i] != NULL)
+  {
+    char *tmp = param[i];
+    while (*tmp != '\0')
+    {
+      write(1, tmp, 1);
+      tmp += 1;
+    }
+    write(1, " ", 1);
+    i++;
+  }
+  if (!n_mode)
+  {
+    write(1, "\n", 1); 
+  }
+}
+
 struct ast *parser(char *str)
 {
   struct ast *res = NULL;
   
   char **word = lexer(str);
   int i = 0;
+  //bool param = false;
   while (word[i] != NULL)
   {
-    printf("mot %d: %s\n", i+1, word[i]);
+    //printf("mot %d: %s\n", i+1, word[i]);
+    if (strncmp(word[i], "echo", 4) == 0)
+    {
+      //param = true;
+      echo(word, i+1);
+    }
     i++;
   }
 
