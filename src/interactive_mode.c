@@ -1,3 +1,5 @@
+#include "parsing.c"
+
 char *memsize(char *src)
 {
   char *ret = calloc(1, sizeof(char));
@@ -61,9 +63,13 @@ int split_instruction(FILE *fd)
       idx += 1;
     }
     write(1, tmp, idx_tmp);
-    for (int x = 0; x < idx_tmp; x++)
-      tmp[x] = '\0';
-    idx += 1;
+    struct ast *tree = parser(tmp);
+    if (!tree)
+    {
+      for (int x = 0; x < idx_tmp; x++)
+        tmp[x] = '\0';
+      idx += 1;
+    }
   }
   free(buff);
   free(tmp);
