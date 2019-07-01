@@ -1,1 +1,1 @@
-echo Test pp m
+echo Test.

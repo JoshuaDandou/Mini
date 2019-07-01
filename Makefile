@@ -14,3 +14,8 @@ minishell.o: src/minishell.c
 .PHONY: clean
 clean:
 	$(RM) $(OBJ) minishell src/minishell.o
+
+.PHONY: test
+test:
+	chmod 755 tests/test_suite.sh
+	tests/./test_suite.sh

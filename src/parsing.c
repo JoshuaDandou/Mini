@@ -27,17 +27,23 @@ char **lexer(char *str)
       tmp = realloc(tmp, size);
       i++; j++;
     }
-    tmp[j] = '\0';
 
-    res[idx_res] = tmp;
-    idx_res++;
-
-    size_res++;
-    if (size_res > 10)
+    if (j != 0)
     {
-      mem++;
-      res = realloc(res, size_res*mem);
+      tmp[j] = '\0';
+
+      res[idx_res] = tmp;
+      idx_res++;
+
+      size_res++;
+      if (size_res > 10)
+      {
+        mem++;
+        res = realloc(res, size_res*mem);
+      }
     }
+    else
+      free(tmp);
 
     if (str[i] == '\0')
       break;
@@ -58,16 +64,20 @@ void echo(char **param, int x)
     n_mode = true;
     i += 1;
   }
+
+  int fst_wrd = 0;
   while (param[i] != NULL)
   {
+    if (fst_wrd > 0)
+      write(1, " ", 1);
     char *tmp = param[i];
     while (*tmp != '\0')
     {
       write(1, tmp, 1);
       tmp += 1;
     }
-    write(1, " ", 1);
     i++;
+    fst_wrd++;
   }
   if (!n_mode)
   {
@@ -81,13 +91,10 @@ struct ast *parser(char *str)
   
   char **word = lexer(str);
   int i = 0;
-  //bool param = false;
   while (word[i] != NULL)
   {
-    //printf("mot %d: %s\n", i+1, word[i]);
     if (strncmp(word[i], "echo", 4) == 0)
     {
-      //param = true;
       echo(word, i+1);
     }
     i++;

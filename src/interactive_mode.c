@@ -62,7 +62,6 @@ int split_instruction(FILE *fd)
       idx_tmp += 1;
       idx += 1;
     }
-    write(1, tmp, idx_tmp);
     struct ast *tree = parser(tmp);
     if (!tree)
     {
@@ -87,6 +86,7 @@ int interact_mode()
   while (! isatty(0)) 
   {
     ret = split_instruction(stdin);
+    break;
   }
   return ret;
 }
