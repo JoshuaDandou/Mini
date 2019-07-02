@@ -1,5 +1,6 @@
 #include <stdbool.h>
 #include <string.h>
+#include "ast_function.c"
 
 char **lexer(char *str)
 {
@@ -93,10 +94,11 @@ struct ast *parser(char *str)
   int i = 0;
   while (word[i] != NULL)
   {
-    if (strncmp(word[i], "echo", 4) == 0)
+    /*if (strncmp(word[i], "echo", 4) == 0)
     {
       echo(word, i+1);
-    }
+    }*/
+    res = add_ast(res, word[i]);
     i++;
   }
 

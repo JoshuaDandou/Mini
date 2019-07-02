@@ -62,13 +62,12 @@ int split_instruction(FILE *fd)
       idx_tmp += 1;
       idx += 1;
     }
+    tmp[idx_tmp] = '\0';
     struct ast *tree = parser(tmp);
-    if (!tree)
-    {
-      for (int x = 0; x < idx_tmp; x++)
-        tmp[x] = '\0';
-      idx += 1;
-    }
+    ret = exec_ast(tree);
+    for (int x = 0; x < idx_tmp; x++)
+      tmp[x] = '\0';
+    idx += 1;
   }
   free(buff);
   free(tmp);
