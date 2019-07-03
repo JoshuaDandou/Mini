@@ -1,4 +1,5 @@
 #include "parsing.c"
+//#include "return_struct.h"
 
 char *memsize(char *src)
 {
@@ -22,7 +23,7 @@ char *load_buff(FILE *fd)
   int count = 1;
   if (fd != stdin)
   {
-    while ((ret_fread = fgetc(fd)) && (ret_fread != '\n'))
+    while ((ret_fread = fgetc(fd)) && (ret_fread != EOF))
     {
       *(ret_buff + idx) = ret_fread;
       idx++;
@@ -49,14 +50,18 @@ char *load_buff(FILE *fd)
 
 int split_instruction(FILE *fd)
 {
-  int ret = 0;
+  struct ret_instr *ret = NULL;
   char *buff = load_buff(fd);
   char *tmp = memsize(buff);
   int idx = 0;
+
+  while ((buff[idx] != '\0') &&
+      ((buff[idx] == ' ') || (buff[idx] == '\t') || (buff[idx] == '\n')))
+      idx++;
   while (buff[idx] != '\0')
   {
     int idx_tmp = 0;
-     while (buff[idx] != '\0' && buff[idx] != ';')
+    while (buff[idx] != '\0' && buff[idx] != ';')
     {
       tmp[idx_tmp] = buff[idx];
       idx_tmp += 1;
@@ -65,13 +70,29 @@ int split_instruction(FILE *fd)
     tmp[idx_tmp] = '\0';
     struct ast *tree = parser(tmp);
     ret = exec_ast(tree);
+
+    if (ret->code != 0)
+    {
+      if (strcmp(ret->msg, "exit") == 0)
+      {
+        //free all
+        exit(ret->code);
+      }
+      fprintf(stderr, "%s\n", ret->msg);
+    }
+
     for (int x = 0; x < idx_tmp; x++)
       tmp[x] = '\0';
     idx += 1;
+    while ((buff[idx] != '\0') &&
+      ((buff[idx] == ' ') || (buff[idx] == '\t') || (buff[idx] == '\n')))
+      idx++; 
   }
   free(buff);
   free(tmp);
-  return ret;
+  if (!ret)
+    return 0;
+  return ret->code;
 }
 
 int interact_mode()

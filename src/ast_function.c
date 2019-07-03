@@ -1,4 +1,6 @@
 #include "ast_struct.h"
+#include "return_struct.h"
+#include "execution_functions.c"
 
 struct ast *new_ast()
 {
@@ -70,31 +72,72 @@ void echo_exec(struct ast *param)
     write(1, "\n", 1);
 }
 
-int exec_ast(struct ast *ast)
+struct ret_instr *exec_ast(struct ast *ast)
 {
-  if (ast->right == NULL && ast->left == NULL)
-    return 1;
+  struct ret_instr *ret = calloc(1, sizeof(struct ret_instr));
+  ret->msg = "";
+  ret->code = 0;
 
   if (strcmp(ast->value, "||") == 0)
   {
     if (exec_ast(ast->left) == 0)
-      return 0;
-    return exec_ast(ast->right);
+    {
+      ret->code = 0;
+      return ret;
+    }
+    struct ret_instr *tmp = exec_ast(ast->right);
+    ret->code = tmp->code;
+    free(tmp);
+    return ret;
   }
 
   if (strcmp(ast->value, "&&") == 0)
   {
     if (exec_ast(ast->left) != 0)
-      return 1;
-    return exec_ast(ast->right);
+    {
+      ret->code = 1;
+      return ret;
+    }
+    struct ret_instr *tmp = exec_ast(ast->right);
+    ret->code = tmp->code;
+    free(tmp);
+    return ret;
   }
 
   if (strcmp(ast->value, "echo") == 0)
   {
     echo_exec(ast->right);
-    return 0;
+    return ret;
+  }
+
+  if (strncmp(ast->value, "exit", 4) == 0)
+  {
+    int res = exit_exec(ast->right);
+    ret->msg = calloc(5, sizeof(char));
+    ret->msg = strcat(ret->msg, "exit");
+    ret->code = res;
+    return ret;
+  }
+
+  //if (ast->right == NULL && ast->left == NULL)
+  else
+  {
+    //int res = execution_forked(ast->value, ast->right);
+    //if (res < 0)
+    //{
+      ret->msg = calloc(1, sizeof(ast->value) + 21);
+      ret->msg = strcpy(ret->msg, ast->value);
+      ret->msg = strcat(ret->msg, ": command not found");
+      ret->code = 127;
+    /*}
+    else
+    {
+      ret->code = res;
+    }*/
+    return ret;
   }
 
   fprintf(stderr, "error on tree");
-  return 1;
+  ret->code = 1;
+  return ret;
 }

@@ -12,7 +12,7 @@ char **lexer(char *str)
   int i = 0;
   while (str[i] != '\0')
   {
-    while ((str[i] == ' ' || str[i] == '\t') && (str[i] != '\0'))
+    while ((str[i] != '\0') && ((str[i] == ' ') || (str[i] == '\t')))
       i++;
     if (str[i] == '\0')
       break;
