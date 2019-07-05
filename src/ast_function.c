@@ -21,12 +21,9 @@ struct ast *add_ast(struct ast *ast, char *str)
   }
  
   struct ast *res = new_ast();
-  if (strcmp(str, "||") == 0)
-  {
-    res->value = str;
-    res->left = ast;
-  }
-  else if (strcmp(str, "&&") == 0)
+  if ((strcmp(str, "||") == 0) ||
+      (strcmp(str, "&&") == 0) ||
+      (strcmp(str, ">") == 0))
   {
     res->value = str;
     res->left = ast;
@@ -43,36 +40,24 @@ struct ast *add_ast(struct ast *ast, char *str)
   return res;
 }
 
-void echo_exec(struct ast *param)
+void free_ast(struct ast *ast)
 {
-  bool n_mode = false;
-  if (param && (strcmp(param->value, "-n") == 0))
+  if (ast->right == NULL && ast->left == NULL)
   {
-    n_mode = true;
-    param = param->right;
+    free(ast->value);
+    free(ast);
+    return ;
   }
 
-  int fst_wrd = 0;
-  while (param)
-  {
-    if (fst_wrd == 0)
-      fst_wrd++;
-    else
-      write(1, " ", 1);
-
-    char *tmp = param->value;
-    while (*tmp != '\0')
-    {
-      write(1, tmp, 1);
-      tmp += 1;
-    }
-    param = param->right;
-  }
-  if (!n_mode)
-    write(1, "\n", 1);
+  if (ast->left != NULL)
+    free_ast(ast->left);
+  if (ast->right != NULL)
+    free_ast(ast->right);
+  free(ast->value);
+  free(ast);
 }
 
-struct ret_instr *exec_ast(struct ast *ast)
+struct ret_instr *exec_ast(struct ast *ast, FILE *file_out)
 {
   struct ret_instr *ret = calloc(1, sizeof(struct ret_instr));
   ret->msg = "";
@@ -80,37 +65,59 @@ struct ret_instr *exec_ast(struct ast *ast)
 
   if (strcmp(ast->value, "||") == 0)
   {
-    if (exec_ast(ast->left) == 0)
+    struct ret_instr *tmp = exec_ast(ast->left, file_out); 
+    if (tmp->code == 0)
     {
       ret->code = 0;
+      ret->msg = tmp->msg;
+      free(tmp);
       return ret;
     }
-    struct ret_instr *tmp = exec_ast(ast->right);
-    ret->code = tmp->code;
     free(tmp);
+
+    struct ret_instr *tmp_2 = exec_ast(ast->right, file_out);
+    ret->code = tmp_2->code;
+    ret->msg = tmp_2->msg;
+    free(tmp_2);
     return ret;
   }
 
   if (strcmp(ast->value, "&&") == 0)
   {
-    if (exec_ast(ast->left) != 0)
+    struct ret_instr *tmp = exec_ast(ast->left, file_out);
+    if (tmp->code != 0)
     {
-      ret->code = 1;
+      ret->code = tmp->code;
+      ret->msg = tmp->msg;
+      free(tmp);
       return ret;
     }
-    struct ret_instr *tmp = exec_ast(ast->right);
+    free(tmp);
+
+    struct ret_instr *tmp_2 = exec_ast(ast->right, file_out);
+    ret->code = tmp_2->code;
+    ret->msg = tmp_2->msg;
+    free(tmp_2);
+    return ret;
+  }
+
+  if (strcmp(ast->value, ">") == 0)
+  {
+    FILE *fd = load_file(ast->right);
+    struct ret_instr *tmp = exec_ast(ast->left, fd);
     ret->code = tmp->code;
+    ret->msg = tmp->msg;
     free(tmp);
     return ret;
   }
 
   if (strcmp(ast->value, "echo") == 0)
   {
-    echo_exec(ast->right);
+    echo_exec(ast->right, file_out);
     return ret;
   }
 
-  if (strncmp(ast->value, "exit", 4) == 0)
+  if (strcmp(ast->value, "exit") == 0)
   {
     int res = exit_exec(ast->right);
     ret->msg = calloc(5, sizeof(char));
@@ -119,21 +126,48 @@ struct ret_instr *exec_ast(struct ast *ast)
     return ret;
   }
 
-  //if (ast->right == NULL && ast->left == NULL)
+  if (strcmp(ast->value, "kill") == 0)
+  {
+    ret->code = kill_exec(ast->right);
+    return ret;
+  }
+
+  if (strcmp(ast->value, "cd") == 0)
+  {
+    ret->code = cd_exec(ast->right);
+    return ret;
+  }
+
   else
   {
-    //int res = execution_forked(ast->value, ast->right);
-    //if (res < 0)
-    //{
-      ret->msg = calloc(1, sizeof(ast->value) + 21);
-      ret->msg = strcpy(ret->msg, ast->value);
-      ret->msg = strcat(ret->msg, ": command not found");
+    int res = 0;
+    pid_t	pid;
+    int exit_status = 0;
+
+    char **arg = argv_tab(ast->value, ast->right);
+    pid = fork();
+    if (pid == 0)
+      res = execution_forked(ast->value, arg);
+    else if (pid < 0)
+    {
+      fprintf(stderr, "fork error\n");
+    }
+    else {
+      int status;
+      pid = wait(&status);
+      exit_status = WEXITSTATUS(status);
+    }
+    free(arg);
+
+    if (res < 0)
+    {
+      fprintf(stderr, "%s: command not found\n", ast->value);
       ret->code = 127;
-    /*}
+    }
     else
     {
-      ret->code = res;
-    }*/
+      ret->code = exit_status;
+    }
     return ret;
   }
 

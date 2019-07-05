@@ -1,0 +1,10 @@
+#define _POSIX_SOURCE
+#include <signal.h>
+#include <sys/types.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <err.h>
+#include "interactive_mode.c"
+#include "file_mode.c"
+#include "sig_functions.c"

@@ -1,8 +1,4 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include "interactive_mode.c"
-#include "file_mode.c"
+#include "minishell.h"
 
 int main(int argc, char *argv[])
 {

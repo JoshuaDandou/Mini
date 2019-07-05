@@ -4,24 +4,22 @@
 
 char **lexer(char *str)
 {
-  char **res = calloc(10, sizeof(char*));
+  char **res = calloc(100, sizeof(char*));
   int idx_res = 0;
-  int size_res = 1;
-  int mem = 1;
 
   int i = 0;
   while (str[i] != '\0')
   {
-    while ((str[i] != '\0') && ((str[i] == ' ') || (str[i] == '\t')))
+    while ((str[i] != '\0') && ((str[i] == ' ') 
+          || (str[i] == '\t') || (str[i] == '\n')))
       i++;
     if (str[i] == '\0')
       break;
-    
-    
+
     char *tmp = calloc(1, sizeof(char));
     int j = 0;
     int size = 1;
-    while (str[i] != ' ' && str[i] != '\n' && str[i] != '\0')
+    while (str[i] != '\0' && str[i] != ' ' && str[i] != '\n' && str[i] != '\t')
     {
       tmp[j] = str[i];
       size++;
@@ -32,16 +30,8 @@ char **lexer(char *str)
     if (j != 0)
     {
       tmp[j] = '\0';
-
       res[idx_res] = tmp;
       idx_res++;
-
-      size_res++;
-      if (size_res > 10)
-      {
-        mem++;
-        res = realloc(res, size_res*mem);
-      }
     }
     else
       free(tmp);
@@ -94,14 +84,10 @@ struct ast *parser(char *str)
   int i = 0;
   while (word[i] != NULL)
   {
-    /*if (strncmp(word[i], "echo", 4) == 0)
-    {
-      echo(word, i+1);
-    }*/
     res = add_ast(res, word[i]);
     i++;
   }
-
+  free(word);
   return res;
   //free word?
 }
