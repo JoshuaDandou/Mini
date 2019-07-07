@@ -4,6 +4,5 @@ void	signal_handler(int i)
 	{
     printf("\n");
     interact_mode();
-		//signal(SIGINT, signal_handler);
 	}
 }

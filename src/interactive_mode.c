@@ -1,6 +1,4 @@
 #include "parsing.c"
-//#include "sig_functions.c"
-//#include "return_struct.h"
 
 void  signal_handler(int i);
 
@@ -73,7 +71,9 @@ int split_instruction(FILE *fd)
     }
     tmp[idx_tmp] = '\0';
     struct ast *tree = parser(tmp);
-    ret = exec_ast(tree, stdout);
+    fflush(stdout);
+    fflush(stderr);
+    ret = exec_ast(tree, stdout, stdin);
     free_ast(tree);
 
     if (ret->code != 0)
@@ -107,6 +107,8 @@ int interact_mode()
   int ret = 0;
   while (isatty(0))
   {
+    fflush(stderr);
+    fflush(stdout);
     write(1, "minishell$ ", 11);
     signal(SIGINT, signal_handler);
     ret = split_instruction(stdin);

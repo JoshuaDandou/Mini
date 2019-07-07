@@ -46,36 +46,6 @@ char **lexer(char *str)
   return res;
 }
 
-void echo(char **param, int x)
-{
-  int i = x;
-  bool n_mode = false;
-  if (strncmp(param[i], "-n", 2) == 0)
-  {
-    n_mode = true;
-    i += 1;
-  }
-
-  int fst_wrd = 0;
-  while (param[i] != NULL)
-  {
-    if (fst_wrd > 0)
-      write(1, " ", 1);
-    char *tmp = param[i];
-    while (*tmp != '\0')
-    {
-      write(1, tmp, 1);
-      tmp += 1;
-    }
-    i++;
-    fst_wrd++;
-  }
-  if (!n_mode)
-  {
-    write(1, "\n", 1); 
-  }
-}
-
 struct ast *parser(char *str)
 {
   struct ast *res = NULL;
@@ -89,5 +59,4 @@ struct ast *parser(char *str)
   }
   free(word);
   return res;
-  //free word?
 }

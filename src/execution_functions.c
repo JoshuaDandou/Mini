@@ -1,7 +1,6 @@
 #include <sys/wait.h>
 #include <signal.h>
 #include <time.h>
-#include <sys/types.h>
 
 void echo_exec(struct ast *param, FILE *fd)
 {
@@ -37,32 +36,20 @@ int kill_exec(struct ast *param)
   int res = 0;
   int option = SIGTERM;
 
-  if (strcmp(param->value, "-s") == 0 || 
+  if (param && (strcmp(param->value, "-s") == 0 || 
       strcmp(param->value, "-TERM") == 0 || 
       strcmp(param->value, "-INT") == 0 || 
       strcmp(param->value, "-HUP") == 0 || 
-      strcmp(param->value, "-KILL") == 0)
+      strcmp(param->value, "-KILL") == 0))
   {
     if (strcmp(param->value, "-TERM") == 0)
-    {
       option = SIGTERM;
-      param = param->right;
-    }
     else if (strcmp(param->value, "-INT") == 0)
-    {
       option = SIGINT;
-      param = param->right;
-    }
     else if (strcmp(param->value, "-HUP") == 0)
-    {
       option = SIGHUP;
-      param = param->right;
-    }
     else if (strcmp(param->value, "-KILL") == 0)
-    {
       option = SIGKILL;
-      param = param->right;
-    }
     else {
       param = param->right;
       if (strcmp(param->value, "TERM") == 0)
@@ -75,31 +62,20 @@ int kill_exec(struct ast *param)
         option = SIGKILL;
       else
       {
-        fprintf(stderr, "kill: %s: invalid signal specification\n"
-            , (param->value + 1));
+        fprintf(stderr, "minishell: kill: %s: invalid signal specification\n"
+            , (param->value));
         return -1;
       }
-      param = param->right;
     }
+    param = param->right;
   }
 
   if (param == NULL)
   {
-    fprintf(stderr, "minishell: kill: usage: kill [-s] pid");
+    fprintf(stderr, "minishell: kill: usage: kill [-s] pid\n");
     return -1;
   }
-  int val = atoi(param->value);
-  pid_t pid;
-  pid = fork();
-  if (pid == 0)
-    res = kill(val, option);
-  else if (pid < 0)
-    fprintf(stderr, "fork error\n");
-  else
-  {
-    int status;
-    pid = wait(&status);
-  }
+  res = kill(atoi(param->value), option);
   return res;
 }
 
@@ -149,9 +125,9 @@ int cd_exec(struct ast *param)
     
 }
 
-FILE *load_file(struct ast *file)
+FILE *load_file(struct ast *file, char *opt)
 {
-  FILE *fd = fopen(file->value, "w+");
+  FILE *fd = fopen(file->value, opt);
   return fd;
 }
 
@@ -171,15 +147,40 @@ char **argv_tab(char *function, struct ast *param)
   return res;
 }
 
-int execution_forked(char *buff, char **arg)
+int execution_forked(char *buff, struct ast *param)
 {
-  int ret_exec = -1;
+  int res= 0;
+  pid_t pid;
+  int res_exec = 0;
+  char **arg = argv_tab(buff, param);
+  pid = fork();
+  fflush(stderr);
+  fflush(stdout);
+  if (pid == 0)
+  {
+    fflush(stderr);
+    fflush(stdout);
+    res_exec = execvp(buff, arg);
+  }
+  else if (pid < 0)
+    fprintf(stderr, "fork error\n");
+  else 
+  {
+    int status;
+    pid = waitpid(pid, &status, 0);
+    res = WEXITSTATUS(status);
+  }
+  fflush(stderr);
+  fflush(stdout);
+  free(arg);
 
-  //char **arg = argv_tab(buff, param);
-  ret_exec = execvp(buff, arg);
-  //free(arg);    
+  if (res_exec < 0)
+  {
+    fprintf(stderr, "minishell: %s: command not found\n", buff);
+    return 127;
+  }
 
-  return ret_exec;
+  return res;
 }
 
 int exit_exec(struct ast *param)
